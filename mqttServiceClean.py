@@ -37,7 +37,7 @@ def on_message(client, userdata, msg):
 	dfdsMessage["typ"] = "1"
 	dfdsMessage["gw"] = gwID
 	dfdsMessage["bn"] = senID
-	dfdsMessage["bt"] = int(time.time())#time.mktime(time.strptime(parsedPayload["metadata"]["time"].split(".")[0], "%Y-%m-%dT%H:%M:%S"))	
+	dfdsMessage["bt"] = int(time.time()) * 1000	
 	
 	#erster Messwert: nox
 	noxData = {}
@@ -59,19 +59,21 @@ def on_message(client, userdata, msg):
 		
 	dfdsMessage["e"] = [noxData, coData]
 	
-	dfdsClient.publish("sc/mw/" + senID, json.dumps(dfdsMessage))
+	dfdsClient.publish("mw/sc/" + senID, json.dumps(dfdsMessage))
 	print("Message published")
 	print(json.dumps(dfdsMessage, sort_keys = True, indent = 4))
 	
 ttnClient = mqtt.Client()
 ttnClient.on_connect = on_ttn_connect
 ttnClient.on_message = on_message
-ttnClient.username_pw_set("name", "pw")
+ttnClient.username_pw_set("user", "pw")
 ttnClient.connect("eu.thethings.network", 1883, 60)
 
 dfdsClient = mqtt.Client()
 dfdsClient.on_connect = on_dfds_connect
-dfdsClient.username_pw_set("name", "pw")
+dfdsClient.username_pw_set("user", "pw")
 dfdsClient.connect("babeauf.nt.fh-koeln.de", 2883, 60)
 
-ttnClient.loop_forever()
+while True:
+    dfdsClient.loop()
+    ttnClient.loop()
